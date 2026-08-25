@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Lucide — L'instrument de précision pour ton contenu</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap');
+
+  :root{
+    --bg:#130C17;
+    --surface:#1C1420;
+    --surface-2:#271B2C;
+    --surface-3:#332338;
+    --ink:#FBF3F0;
+    --muted:#B6A7B7;
+    --muted-2:#83718A;
+    --signal:#FF4D6D;
+    --signal-dim:rgba(255,77,109,0.16);
+    --signal-ink:#210509;
+    --accent2:#8B5CF6;
+    --warn:#FFC93C;
+    --warn-dim:rgba(255,201,60,0.16);
+    --danger:#FF3D68;
+    --danger-dim:rgba(255,61,104,0.16);
+    --line:#3A2A40;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; color:var(--ink); font-family:'Inter',sans-serif;
+    background:
+      radial-gradient(circle at 15% -8%, rgba(255,77,109,0.20), transparent 40%),
+      radial-gradient(circle at 100% 18%, rgba(139,92,246,0.16), transparent 42%),
+      var(--bg);
+    background-attachment:fixed;
+  }
+  body{overflow-x:hidden;}
+  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif; font-weight:600; letter-spacing:-0.01em;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  a{color:inherit; text-decoration:none;}
+  button{font-family:inherit; cursor:pointer;}
+  textarea{font-family:inherit;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+  ::selection{background:var(--signal-dim);}
+
+  .icon{width:20px; height:20px; flex-shrink:0;}
+  .icon-sm{width:15px; height:15px;}
+  .icon-lg{width:28px; height:28px;}
+
+  .container{max-width:480px; margin:0 auto; padding:0 20px;}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    border:none; border-radius:13px; padding:15px 24px; font-weight:700; font-size:14.5px;
+    transition:transform .12s ease, opacity .12s ease; font-family:'Inter',sans-serif;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-signal{
+    background:linear-gradient(135deg, var(--signal), #FF7A59); color:var(--signal-ink);
+    box-shadow:0 10px 24px -10px rgba(255,77,109,0.6);
+  }
+  .btn-ghost{background:var(--surface-2); color:var(--ink); border:1px solid var(--line);}
+  .btn-outline{background:transparent; color:var(--signal); border:1.5px solid var(--signal);}
+  .btn-block{width:100%;}
+  .btn:disabled{opacity:0.45; pointer-events:none;}
+
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:12px; font-weight:600; color:var(--muted); margin-bottom:7px; letter-spacing:0.2px; text-transform:uppercase;}
+  .field textarea, .field input{
+    width:100%; padding:14px 15px; border-radius:12px; border:1.5px solid var(--line);
+    background:var(--surface-2); font-family:'Inter',sans-serif; font-size:14.5px; color:var(--ink);
+  }
+  .field input[type="file"]{
+    padding:12px 14px; font-size:13px; color:var(--muted);
+  }
+  .field input[type="file"]::file-selector-button{
+    background:var(--signal); color:var(--signal-ink); border:none; border-radius:8px; padding:8px 14px;
+    font-weight:700; font-size:12.5px; margin-right:12px; font-family:'Inter',sans-serif;
+  }
+  .field textarea{resize:vertical; min-height:96px; line-height:1.5;}
+  .field textarea:focus, .field input:focus{outline:none; border-color:var(--signal);}
+  .field-hint{font-size:11.5px; color:var(--muted-2); margin-top:6px;}
+  .field-hint.ok{color:var(--signal);}
+  .field-hint.warn{color:var(--warn);}
+  .field-row{display:flex; gap:10px;}
+  .field-row .field{flex:1;}
+
+  .chip-group{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{
+    padding:9px 15px; border-radius:999px; border:1.5px solid var(--line); background:var(--surface-2);
+    font-size:13px; font-weight:600; color:var(--muted);
+  }
+  .chip.active{background:var(--signal-dim); border-color:var(--signal); color:var(--signal);}
+
+  .card{background:var(--surface); border-radius:var(--radius); border:1px solid var(--line);}
+
+  #toast{
+    position:fixed; left:50%; bottom:26px; transform:translate(-50%,20px);
+    background:var(--surface-3); color:var(--ink); font-size:13.5px; font-weight:600;
+    padding:13px 20px; border-radius:12px; opacity:0; transition:opacity .25s, transform .25s;
+    z-index:999; pointer-events:none; display:flex; align-items:center; gap:8px; border:1px solid var(--line);
+    max-width:88vw;
+  }
+  #toast.show{opacity:1; transform:translate(-50%,0);}
+  #toast.err{border-color:var(--danger);}
+
+  /* ================= LANDING ================= */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:calc(16px + env(safe-area-inset-top)) 20px 10px;
+  }
+  .brand{display:flex; align-items:center; gap:9px;}
+  .brand-mark{
+    width:32px; height:32px; border-radius:9px; background:var(--surface-2); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; color:var(--signal);
+  }
+  .brand-name{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; letter-spacing:-0.02em;}
+
+  .hero{padding:20px 20px 8px;}
+  .hero-eyebrow{
+    display:inline-flex; align-items:center; gap:7px; color:var(--signal);
+    font-size:11.5px; font-weight:700; letter-spacing:1px; margin-bottom:16px; text-transform:uppercase;
+  }
+  .hero-eyebrow::before{content:''; width:6px; height:6px; border-radius:50%; background:var(--signal); box-shadow:0 0 8px var(--signal);}
+  .hero h1{font-size:32px; line-height:1.16; margin:0 0 14px; color:var(--ink);}
+  .hero h1 .accent{
+    background:linear-gradient(100deg, var(--signal), var(--warn));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .hero p{font-size:15px; color:var(--muted); line-height:1.6; margin:0 0 26px;}
+
+  .demo-dial-wrap{
+    background:linear-gradient(155deg, var(--surface), var(--surface-2));
+    border:1px solid var(--line); border-radius:20px; padding:24px;
+    margin-bottom:24px; display:flex; align-items:center; gap:20px;
+    box-shadow:0 20px 40px -24px rgba(255,77,109,0.35);
+  }
+  .demo-dial-info{flex:1;}
+  .demo-dial-info .k{font-size:11px; color:var(--muted-2); text-transform:uppercase; letter-spacing:0.5px; font-weight:600;}
+  .demo-dial-info .t{font-size:13.5px; color:var(--muted); margin-top:4px; line-height:1.5;}
+
+  .compare-row{display:flex; gap:10px; margin:20px 0 6px;}
+  .compare-pill{
+    flex:1; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px;
+    text-align:center;
+  }
+  .compare-pill .n{font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:700; color:var(--signal);}
+  .compare-pill .l{font-size:10.5px; color:var(--muted-2); margin-top:2px;}
+
+  .landing-cta{padding:6px 20px 18px;}
+  .landing-footer{padding:18px 20px calc(24px + env(safe-area-inset-bottom)); text-align:center; font-size:11px; color:var(--muted-2);}
+
+  /* ================= ONBOARDING ================= */
+  #screen-onboarding .ob-panel{padding:calc(20px + env(safe-area-inset-top)) 20px calc(26px + env(safe-area-inset-bottom));}
+  .ob-back{
+    width:34px; height:34px; border-radius:10px; background:var(--surface-2); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; color:var(--ink); margin-bottom:22px;
+  }
+  .ob-title{font-size:22px; margin:0 0 6px;}
+  .ob-sub{font-size:13.5px; color:var(--muted); margin:0 0 22px;}
+  .ob-step{display:none;}
+  .ob-step.active{display:block;}
+  .ob-progress{display:flex; gap:6px; margin-bottom:24px;}
+  .ob-progress div{height:3px; flex:1; border-radius:2px; background:var(--line);}
+  .ob-progress div.done{background:var(--signal);}
+
+  /* ================= APP SHELL ================= */
+  #app-shell{min-height:100vh; padding-bottom:80px;}
+  .topbar-app{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:calc(14px + env(safe-area-inset-top)) 20px 14px;
+  }
+  .topbar-app .brand{cursor:pointer;}
+  .niche-pill{
+    font-size:11px; color:var(--muted); background:var(--surface-2); border:1px solid var(--line);
+    padding:6px 11px; border-radius:999px; font-weight:600;
+  }
+
+  .tab-content{display:none; padding:4px 20px 20px;}
+  .tab-content.active{display:block;}
+
+  .tool-card{
+    display:flex; align-items:center; gap:14px; padding:16px; border-radius:18px;
+    background:linear-gradient(160deg, var(--surface), var(--surface-2)); border:1px solid var(--line); margin-bottom:12px;
+  }
+  .tool-card:active{transform:scale(0.98);}
+  .tool-card .ti{
+    width:46px; height:46px; border-radius:13px; background:var(--signal-dim); color:var(--signal);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .tool-card .ti.violet{background:rgba(139,92,246,0.16); color:var(--accent2);}
+  .tool-card .ti.gold{background:var(--warn-dim); color:var(--warn);}
+  .tool-card .tt{flex:1;}
+  .tool-card .tt .t{font-weight:700; font-size:14.5px;}
+  .tool-card .tt .s{font-size:12px; color:var(--muted); margin-top:2px;}
+  .tool-card .arrow{color:var(--muted-2);}
+
+  .section-title{display:flex; align-items:center; justify-content:space-between; margin:26px 0 12px;}
+  .section-title h3{margin:0; font-size:14px; font-family:'Inter',sans-serif; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;}
+
+  .hist-row{
+    display:flex; align-items:center; gap:12px; padding:13px; border-radius:14px; border:1px solid var(--line);
+    background:var(--surface); margin-bottom:9px;
+  }
+  .hist-score{
+    width:42px; height:42px; border-radius:11px; display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px; flex-shrink:0;
+  }
+  .hist-info{flex:1; min-width:0;}
+  .hist-info .t{font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .hist-info .s{font-size:11px; color:var(--muted-2); margin-top:2px;}
+
+  .empty-note{
+    text-align:center; padding:28px 16px; color:var(--muted); font-size:13px; border:1px dashed var(--line);
+    border-radius:14px; background:var(--surface);
+  }
+
+  /* ---- analyze / compare screens ---- */
+  .tool-header{padding:calc(16px + env(safe-area-inset-top)) 20px 6px; display:flex; align-items:center; gap:12px;}
+  .tool-header h2{margin:0; font-size:18px;}
+  .tool-body{padding:14px 20px 24px;}
+
+  .platform-row{display:flex; gap:8px; margin-bottom:18px;}
+  .platform-chip{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 6px;
+    border-radius:12px; border:1.5px solid var(--line); background:var(--surface-2); color:var(--muted); font-size:11px; font-weight:600;
+  }
+  .platform-chip.active{border-color:var(--signal); color:var(--signal); background:var(--signal-dim);}
+
+  .stats-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:6px;}
+
+  .loading-wrap{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; text-align:center;
+  }
+  .loading-ring{
+    width:52px; height:52px; border-radius:50%; border:3px solid var(--line); border-top-color:var(--signal);
+    animation:spin 0.9s linear infinite; margin-bottom:18px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-wrap p{color:var(--muted); font-size:13.5px; margin:0;}
+
+  /* ---- result: signal dial ---- */
+  .result-wrap{padding-top:4px;}
+  .dial-card{
+    background:linear-gradient(160deg, var(--surface), var(--surface-2));
+    border:1px solid var(--line); border-radius:22px; padding:26px 20px;
+    display:flex; flex-direction:column; align-items:center; margin-bottom:18px;
+    box-shadow:0 24px 44px -28px rgba(255,77,109,0.4);
+  }
+  .dial-svg{width:180px; height:180px;}
+  .dial-center{text-align:center; margin-top:-118px; margin-bottom:66px;}
+  .dial-center .num{font-family:'JetBrains Mono',monospace; font-size:40px; font-weight:700;}
+  .dial-center .lbl{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-top:2px;}
+  .dial-verdict{font-size:15px; color:var(--muted); text-align:center; max-width:280px; line-height:1.55;}
+
+  .subscore-row{display:flex; flex-direction:column; gap:10px; margin-bottom:20px;}
+  .subscore{display:flex; align-items:center; gap:12px;}
+  .subscore .l{width:96px; font-size:12px; color:var(--muted); font-weight:600; flex-shrink:0;}
+  .subscore-bar-bg{flex:1; height:7px; border-radius:4px; background:var(--surface-2); overflow:hidden;}
+  .subscore-bar-fill{height:100%; border-radius:4px; background:var(--signal);}
+  .subscore .v{width:28px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink); flex-shrink:0;}
+
+  .result-block{margin-bottom:20px;}
+  .result-block h4{
+    display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; text-transform:uppercase;
+    letter-spacing:0.5px; color:var(--muted); margin:0 0 12px;
+  }
+  .point-item{
+    display:flex; align-items:flex-start; gap:10px; padding:13px 14px; border-radius:12px; background:var(--surface);
+    border:1px solid var(--line); margin-bottom:8px; font-size:15.5px; line-height:1.55;
+  }
+  .point-item.pos{border-left:3px solid var(--signal);}
+  .point-item.neg{border-left:3px solid var(--danger);}
+  .point-item .ic{flex-shrink:0; margin-top:1px;}
+
+  .hook-alt{
+    background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px 15px; margin-bottom:9px;
+    font-size:15.5px; line-height:1.55; position:relative;
+  }
+  .hook-alt .tag{font-size:10px; color:var(--signal); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:5px; display:block;}
+
+  .caption-box{
+    background:var(--surface-2); border:1px dashed var(--line); border-radius:12px; padding:15px; font-size:14.5px;
+    line-height:1.65; color:var(--muted);
+  }
+  .caption-box .hashtags{color:var(--signal); margin-top:6px; display:block;}
+
+  /* ---- compare screen ---- */
+  .vs-divider{display:flex; align-items:center; gap:10px; margin:16px 0;}
+  .vs-divider div{flex:1; height:1px; background:var(--line);}
+  .vs-divider span{font-size:11px; color:var(--muted-2); font-weight:700;}
+
+  .winner-card{
+    background:linear-gradient(135deg, var(--signal-dim), rgba(255,201,60,0.1));
+    border:1.5px solid var(--signal); border-radius:18px; padding:20px; margin-bottom:18px;
+    text-align:center; box-shadow:0 18px 34px -22px rgba(255,77,109,0.45);
+  }
+  .winner-card .tag{font-size:11px; color:var(--warn); font-weight:700; text-transform:uppercase; letter-spacing:1px;}
+  .winner-card h3{
+    margin:8px 0 0; font-size:19px;
+    background:linear-gradient(100deg, var(--signal), var(--warn));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+
+  /* ---- ideas screen ---- */
+  .idea-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:15px; margin-bottom:10px;
+  }
+  .idea-card .fmt{
+    display:inline-block; font-size:10px; font-weight:700; color:var(--warn); background:var(--warn-dim);
+    padding:4px 9px; border-radius:999px; margin-bottom:9px; text-transform:uppercase; letter-spacing:0.4px;
+  }
+  .idea-card h4{margin:0 0 6px; font-size:16px; font-family:'Inter',sans-serif; font-weight:700;}
+  .idea-card p{margin:0; font-size:14px; color:var(--muted); line-height:1.55;}
+  .idea-structure{margin-top:12px; padding-top:12px; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:9px;}
+  .struct-step{display:flex; align-items:flex-start; gap:9px; font-size:14px; color:var(--muted); line-height:1.5;}
+  .struct-num{
+    width:19px; height:19px; border-radius:50%; background:var(--signal-dim); color:var(--signal);
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; margin-top:1px;
+  }
+  .script-box{
+    margin-top:12px; padding-top:12px; border-top:1px solid var(--line); font-size:15.5px; color:var(--ink); line-height:1.7;
+  }
+
+  /* ---- bottom nav ---- */
+  .bottom-nav{
+    position:fixed; left:0; right:0; bottom:0; z-index:30; background:var(--surface);
+    border-top:1px solid var(--line); display:flex; padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+  }
+  .nav-btn{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; border:none;
+    background:transparent; color:var(--muted-2); font-size:10.5px; font-weight:600;
+  }
+  .nav-btn.active{color:var(--signal);}
+
+  .badge-demo{
+    position:fixed; top:calc(10px + env(safe-area-inset-top)); right:10px; z-index:200;
+    background:var(--surface-3); color:var(--muted); font-size:9px; font-weight:700; letter-spacing:0.4px;
+    padding:5px 9px; border-radius:999px; border:1px solid var(--line); pointer-events:none;
+  }
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+<div class="badge-demo">by KD Design</div>
+
+<div id="app">
+
+  <!-- ================= LANDING ================= -->
+  <div class="screen active" id="screen-landing">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></svg>
+        </div>
+        <span class="brand-name">Lucide</span>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="hero-eyebrow">Analyse de contenu par IA</div>
+      <h1>Ne publie plus <span class="accent">à l'aveugle</span></h1>
+      <p>Lucide passe chaque script, hook et vidéo au crible d'une vraie IA qui raisonne — pas de conseils recyclés. Tu sais exactement ce qui va marcher, ce qui va couler, et pourquoi. En quelques secondes.</p>
+
+      <div class="demo-dial-wrap">
+        <svg class="dial-svg" style="width:88px; height:88px;" viewBox="0 0 120 120">
+          <defs>
+            <linearGradient id="dialGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#FF4D6D"/>
+              <stop offset="100%" stop-color="#FFC93C"/>
+            </linearGradient>
+          </defs>
+          <circle cx="60" cy="60" r="50" fill="none" stroke="#332338" stroke-width="10"/>
+          <circle cx="60" cy="60" r="50" fill="none" stroke="url(#dialGrad)" stroke-width="10" stroke-linecap="round"
+            stroke-dasharray="314" stroke-dashoffset="25" transform="rotate(-90 60 60)"/>
+          <text x="60" y="68" text-anchor="middle" font-family="JetBrains Mono" font-size="30" font-weight="700" fill="#FBF3F0">92</text>
+        </svg>
+        <div class="demo-dial-info">
+          <div class="k">Signal Score</div>
+          <div class="t">Un score honnête et détaillé — pas juste un "c'est bien !" qui ne t'apprend rien.</div>
+        </div>
+      </div>
+
+      <button class="btn btn-signal btn-block" onclick="showScreen('screen-onboarding')">
+        Analyser mon premier contenu
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+
+      <div class="compare-row">
+        <div class="compare-pill"><div class="n">3</div><div class="l">outils d'analyse</div></div>
+        <div class="compare-pill"><div class="n">IA</div><div class="l">raisonnement réel</div></div>
+        <div class="compare-pill"><div class="n">0 $</div><div class="l">pour percer</div></div>
+      </div>
+    </div>
+
+    <div class="landing-footer">
+      Lucide — prototype personnel. Les analyses utilisent un modèle de langage et restent des estimations, pas des garanties de performance.
+    </div>
+  </div>
+
+  <!-- ================= ONBOARDING ================= -->
+  <div class="screen" id="screen-onboarding">
+    <div class="ob-panel">
+      <div class="ob-back" onclick="showScreen('screen-landing')">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="ob-progress"><div id="obProg1"></div><div id="obProg2"></div></div>
+
+      <div class="ob-step active" id="obStep1">
+        <h2 class="ob-title">Ta plateforme principale</h2>
+        <p class="ob-sub">Ça calibre le ton et le format des analyses.</p>
+        <div class="chip-group" id="obPlatformChips">
+          <button class="chip" data-v="TikTok" onclick="selectChip(this,'platform')">TikTok</button>
+          <button class="chip" data-v="Instagram Reels" onclick="selectChip(this,'platform')">Instagram Reels</button>
+          <button class="chip" data-v="YouTube Shorts" onclick="selectChip(this,'platform')">YouTube Shorts</button>
+          <button class="chip" data-v="Facebook Reels" onclick="selectChip(this,'platform')">Facebook Reels</button>
+        </div>
+        <button class="btn btn-signal btn-block" style="margin-top:24px;" onclick="obNext(2)">Continuer</button>
+      </div>
+
+      <div class="ob-step" id="obStep2">
+        <h2 class="ob-title">Ta niche et ton objectif</h2>
+        <p class="ob-sub">Colle ton nom de profil ou ta bio, Lucide détecte ta niche.</p>
+        <div class="field">
+          <label>Nom de profil / bio</label>
+          <textarea id="obProfileText" maxlength="500" placeholder="Ex : @kd.design_bf — Créateur tech & design à Ouaga 🇧🇫 | Astuces web & IA" style="min-height:70px;"></textarea>
+        </div>
+        <button class="btn btn-outline btn-block" id="obDetectBtn" onclick="detectNiche()">Détecter ma niche</button>
+
+        <div id="obNicheLoading" style="display:none; padding:16px 0 4px; text-align:center;">
+          <div class="loading-ring" style="width:30px; height:30px; margin:0 auto;"></div>
+        </div>
+
+        <div class="field" id="obNicheResultField" style="display:none; margin-top:16px;">
+          <label>Choisis ta niche</label>
+          <div class="chip-group" id="obNicheChips"></div>
+        </div>
+
+        <div class="field" style="margin-top:18px;">
+          <label>Objectif principal</label>
+          <div class="chip-group" id="obGoalChips">
+            <button class="chip" data-v="Vues" onclick="selectChip(this,'goal')">Vues</button>
+            <button class="chip" data-v="Ventes" onclick="selectChip(this,'goal')">Ventes</button>
+            <button class="chip" data-v="Communauté" onclick="selectChip(this,'goal')">Communauté</button>
+          </div>
+        </div>
+        <button class="btn btn-signal btn-block" style="margin-top:10px;" id="obFinishBtn" onclick="finishOnboarding()" disabled>Voir mon espace</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= APP SHELL ================= -->
+  <div class="screen" id="app-shell">
+    <div class="topbar-app">
+      <div class="brand" onclick="switchTab('home')">
+        <div class="brand-mark">
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></svg>
+        </div>
+        <span class="brand-name">Lucide</span>
+      </div>
+      <div class="niche-pill" id="topNichePill">—</div>
+    </div>
+
+    <!-- TAB: HOME -->
+    <div class="tab-content active" id="tab-home">
+      <div class="tool-card" onclick="openTool('analyze')">
+        <div class="ti"><svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.8"/></svg></div>
+        <div class="tt"><div class="t">Analyser un contenu</div><div class="s">Vidéo, script ou légende → diagnostic sans filtre</div></div>
+        <svg class="arrow icon-sm" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="tool-card" onclick="openTool('compare')">
+        <div class="ti violet"><svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M8 3v18M16 3v18M4 8h4M4 16h4M16 8h4M16 16h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+        <div class="tt"><div class="t">Comparer deux vidéos</div><div class="s">Laquelle est la plus forte, et pourquoi</div></div>
+        <svg class="arrow icon-sm" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="tool-card" onclick="openTool('ideas')">
+        <div class="ti gold"><svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M9 18h6M10 22h4M12 2a6 6 0 0 0-4 10.5c.6.6 1 1.4 1 2.5h6c0-1.1.4-1.9 1-2.5A6 6 0 0 0 12 2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+        <div class="tt"><div class="t">Générer des idées</div><div class="s">Niche + objectif → scripts complets prêts à tourner</div></div>
+        <svg class="arrow icon-sm" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+
+      <div class="section-title"><h3>Historique récent</h3></div>
+      <div id="homeHistoryList"></div>
+    </div>
+
+    <!-- TAB: HISTORY -->
+    <div class="tab-content" id="tab-history">
+      <div class="section-title" style="margin-top:6px;"><h3>Toutes tes analyses</h3></div>
+      <div id="fullHistoryList"></div>
+    </div>
+
+    <!-- TAB: PROFILE -->
+    <div class="tab-content" id="tab-profile">
+      <div class="section-title" style="margin-top:6px;"><h3>Ton profil</h3></div>
+      <div class="field">
+        <label>Plateforme</label>
+        <div class="chip-group" id="profPlatformChips">
+          <button class="chip" data-v="TikTok" onclick="selectChip(this,'platform',true)">TikTok</button>
+          <button class="chip" data-v="Instagram Reels" onclick="selectChip(this,'platform',true)">Instagram Reels</button>
+          <button class="chip" data-v="YouTube Shorts" onclick="selectChip(this,'platform',true)">YouTube Shorts</button>
+          <button class="chip" data-v="Facebook Reels" onclick="selectChip(this,'platform',true)">Facebook Reels</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Niche</label>
+        <input type="text" id="profNiche">
+      </div>
+      <div class="field">
+        <label>Objectif</label>
+        <div class="chip-group" id="profGoalChips">
+          <button class="chip" data-v="Vues" onclick="selectChip(this,'goal',true)">Vues</button>
+          <button class="chip" data-v="Ventes" onclick="selectChip(this,'goal',true)">Ventes</button>
+          <button class="chip" data-v="Communauté" onclick="selectChip(this,'goal',true)">Communauté</button>
+        </div>
+      </div>
+      <button class="btn btn-signal btn-block" onclick="saveProfile()">Enregistrer</button>
+    </div>
+
+    <div class="bottom-nav">
+      <button class="nav-btn active" data-tab="home" onclick="switchTab('home')">
+        <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M3 11l9-7 9 7M5 10v10h14V10" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        Accueil
+      </button>
+      <button class="nav-btn" data-tab="history" onclick="switchTab('history')">
+        <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M4 19V10M10 19V5M16 19v-7M20 19V8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Historique
+      </button>
+      <button class="nav-btn" data-tab="profile" onclick="switchTab('profile')">
+        <svg class="icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.5-4 5-5.5 7.5-5.5S18 16 19.5 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Profil
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= ANALYZE TOOL ================= -->
+  <div class="screen" id="screen-analyze">
+    <div class="tool-header">
+      <div class="ob-back" onclick="closeTool('analyze')">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h2>Analyser un contenu</h2>
+    </div>
+    <div class="tool-body" id="analyzeForm">
+      <div class="platform-row" id="analyzePlatformRow"></div>
+      <div class="field">
+        <label>Importer la vidéo (≤ 5 Mo, optionnel)</label>
+        <input type="file" accept="video/*" id="analyzeVideoFile" onchange="handleVideoSelect(this,'analyze')">
+        <div class="field-hint" id="analyzeVideoStatus">Lucide extrait des images clés de la vidéo pour analyser le rythme et le visuel. Au-delà de 5 Mo, seules les 5 premières secondes sont utilisées.</div>
+      </div>
+      <div class="field">
+        <label>Lien de la vidéo (optionnel)</label>
+        <input type="text" id="analyzeLink" placeholder="https://...">
+      </div>
+      <div class="field">
+        <label>Script ou transcription de la vidéo</label>
+        <textarea id="analyzeText" maxlength="4000" placeholder="Colle le texte parlé de ta vidéo, ta légende, ou l'idée complète..."></textarea>
+        <div class="field-hint">Plus tu donnes de contexte (vidéo + texte), plus l'analyse est précise.</div>
+      </div>
+      <div class="stats-grid">
+        <div class="field"><label>Vues (optionnel)</label><input type="number" id="statViews" placeholder="0"></div>
+        <div class="field"><label>Rétention % (optionnel)</label><input type="number" id="statRetention" placeholder="0"></div>
+      </div>
+      <button class="btn btn-signal btn-block" onclick="runAnalyze()">Lancer l'analyse</button>
+    </div>
+    <div class="tool-body" id="analyzeLoading" style="display:none;">
+      <div class="loading-wrap"><div class="loading-ring"></div><p>Lucide analyse ton contenu...</p></div>
+    </div>
+    <div class="tool-body" id="analyzeResult" style="display:none;"></div>
+  </div>
+
+  <!-- ================= COMPARE TOOL ================= -->
+  <div class="screen" id="screen-compare">
+    <div class="tool-header">
+      <div class="ob-back" onclick="closeTool('compare')">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h2>Comparer deux vidéos</h2>
+    </div>
+    <div class="tool-body" id="compareForm">
+      <div class="field"><label>Vidéo A — importer (≤ 5 Mo, optionnel)</label><input type="file" accept="video/*" id="compareVideoFileA" onchange="handleVideoSelect(this,'compareA')"><div class="field-hint" id="compareAVideoStatus">Au-delà de 5 Mo, seules les 5 premières secondes sont analysées.</div></div>
+      <div class="field"><label>Vidéo A — lien</label><input type="text" id="compareLinkA" placeholder="https://..."></div>
+      <div class="field"><label>Vidéo A — script ou transcription</label><textarea id="compareA" maxlength="4000" placeholder="Texte parlé de la vidéo A..."></textarea></div>
+      <div class="vs-divider"><div></div><span>VS</span><div></div></div>
+      <div class="field"><label>Vidéo B — importer (≤ 5 Mo, optionnel)</label><input type="file" accept="video/*" id="compareVideoFileB" onchange="handleVideoSelect(this,'compareB')"><div class="field-hint" id="compareBVideoStatus">Au-delà de 5 Mo, seules les 5 premières secondes sont analysées.</div></div>
+      <div class="field"><label>Vidéo B — lien</label><input type="text" id="compareLinkB" placeholder="https://..."></div>
+      <div class="field"><label>Vidéo B — script ou transcription</label><textarea id="compareB" maxlength="4000" placeholder="Texte parlé de la vidéo B..."></textarea></div>
+      <div class="field-hint" style="margin-bottom:14px;">Importe la vidéo et/ou colle le texte de chaque côté — plus tu donnes d'éléments, plus la comparaison est fiable.</div>
+      <button class="btn btn-signal btn-block" style="margin-top:6px;" onclick="runCompare()">Comparer</button>
+    </div>
+    <div class="tool-body" id="compareLoading" style="display:none;">
+      <div class="loading-wrap"><div class="loading-ring"></div><p>Lucide compare les deux versions...</p></div>
+    </div>
+    <div class="tool-body" id="compareResult" style="display:none;"></div>
+  </div>
+
+  <!-- ================= IDEAS TOOL ================= -->
+  <div class="screen" id="screen-ideas">
+    <div class="tool-header">
+      <div class="ob-back" onclick="closeTool('ideas')">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h2>Générer des idées</h2>
+    </div>
+    <div class="tool-body" id="ideasForm">
+      <div class="field"><label>Niche</label><input type="text" id="ideasNiche"></div>
+      <div class="field">
+        <label>Objectif</label>
+        <div class="chip-group" id="ideasGoalChips">
+          <button class="chip" data-v="Vues" onclick="selectChip(this,'ideasGoal')">Vues</button>
+          <button class="chip" data-v="Ventes" onclick="selectChip(this,'ideasGoal')">Ventes</button>
+          <button class="chip" data-v="Communauté" onclick="selectChip(this,'ideasGoal')">Communauté</button>
+        </div>
+      </div>
+      <button class="btn btn-signal btn-block" style="margin-top:6px;" onclick="runIdeas()">Générer 4 idées</button>
+    </div>
+    <div class="tool-body" id="ideasLoading" style="display:none;">
+      <div class="loading-wrap"><div class="loading-ring"></div><p>Lucide génère des concepts...</p></div>
+    </div>
+    <div class="tool-body" id="ideasResult" style="display:none;"></div>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================
+   STATE
+========================================================= */
+let profile = { platform:'TikTok', niche:'', goal:'Vues' };
+let history = []; // {id, type, score, snippet, platform, date, data}
+let obSelected = { platform:'TikTok', goal:'Vues' };
+
+/* =========================================================
+   PERSISTENCE — sauvegarde locale (profil + historique)
+========================================================= */
+const STORAGE_KEY = 'lucide_state_v1';
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ profile, history }));
+  }catch(e){ /* stockage indisponible (navigation privée, quota) — on continue sans persister */ }
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return false;
+    const saved = JSON.parse(raw);
+    if(saved.profile) profile = saved.profile;
+    if(Array.isArray(saved.history)) history = saved.history;
+    return !!(saved.profile && saved.profile.niche);
+  }catch(e){ return false; }
+}
+
+/* =========================================================
+   SÉCURITÉ — échappement HTML pour tout contenu inséré via innerHTML
+========================================================= */
+function escapeHtml(str){
+  if(str===null || str===undefined) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+/* =========================================================
+   UTIL / NAV
+========================================================= */
+function showToast(msg, isErr){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.toggle('err', !!isErr);
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function switchTab(tab){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  if(tab==='history') renderFullHistory();
+  window.scrollTo(0,0);
+}
+function selectChip(btn, group, isProfile){
+  const parent = btn.parentElement;
+  parent.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  if(isProfile){
+    if(group==='platform') profile.platform = btn.dataset.v;
+    if(group==='goal') profile.goal = btn.dataset.v;
+  } else if(group==='ideasGoal'){
+    ideasGoalSelected = btn.dataset.v;
+  } else {
+    obSelected[group] = btn.dataset.v;
+    if(group==='niche') document.getElementById('obFinishBtn').disabled = false;
+  }
+}
+let ideasGoalSelected = 'Vues';
+
+/* =========================================================
+   ONBOARDING
+========================================================= */
+function obNext(step){
+  document.getElementById('obStep1').classList.remove('active');
+  document.getElementById('obStep2').classList.add('active');
+  document.getElementById('obProg1').classList.add('done');
+}
+async function detectNiche(){
+  const txt = document.getElementById('obProfileText').value.trim();
+  if(!txt){ showToast('Colle ton nom de profil ou ta bio d\'abord', true); return; }
+  document.getElementById('obDetectBtn').style.display='none';
+  document.getElementById('obNicheLoading').style.display='block';
+  document.getElementById('obNicheResultField').style.display='none';
+
+  const prompt = `Analyse ce profil/bio de créateur de contenu et propose 4 niches possibles, de la plus probable à la moins probable, en 1-3 mots chacune (ex: "cuisine locale", "tech & IA", "mode streetwear").
+
+Profil/bio: """${txt}"""
+
+Réponds UNIQUEMENT avec un JSON valide :
+{"niches": ["<niche 1>", "<niche 2>", "<niche 3>", "<niche 4>"]}`;
+
+  try{
+    const result = await callLucideAI(prompt);
+    document.getElementById('obNicheLoading').style.display='none';
+    const chipsWrap = document.getElementById('obNicheChips');
+    chipsWrap.innerHTML = result.niches.map(n=>`<button class="chip" data-v="${n}" onclick="selectChip(this,'niche')">${n}</button>`).join('')
+      + `<button class="chip" data-v="autre" onclick="pickCustomNiche(this)">Autre...</button>`;
+    document.getElementById('obNicheResultField').style.display='block';
+    document.getElementById('obDetectBtn').style.display='block';
+    document.getElementById('obDetectBtn').textContent = 'Redétecter';
+  }catch(e){
+    document.getElementById('obNicheLoading').style.display='none';
+    document.getElementById('obDetectBtn').style.display='block';
+    showToast(e.message || 'Détection échouée — réessaie', true);
+  }
+}
+function pickCustomNiche(btn){
+  const v = prompt('Précise ta niche :');
+  if(!v) return;
+  obSelected.niche = v.trim();
+  document.querySelectorAll('#obNicheChips .chip').forEach(c=>c.classList.remove('active'));
+  btn.textContent = v.trim();
+  btn.dataset.v = v.trim();
+  btn.classList.add('active');
+  document.getElementById('obFinishBtn').disabled = false;
+}
+function finishOnboarding(){
+  profile.platform = obSelected.platform || 'TikTok';
+  profile.goal = obSelected.goal || 'Vues';
+  profile.niche = obSelected.niche || 'généraliste';
+  document.getElementById('obProg2').classList.add('done');
+  saveState();
+  enterApp();
+}
+function enterApp(){
+  document.getElementById('topNichePill').textContent = profile.platform + ' · ' + profile.niche;
+  document.getElementById('profNiche').value = profile.niche;
+  document.getElementById('ideasNiche').value = profile.niche;
+  syncChipGroup('profPlatformChips', profile.platform);
+  syncChipGroup('profGoalChips', profile.goal);
+  syncChipGroup('ideasGoalChips', profile.goal);
+  ideasGoalSelected = profile.goal;
+  buildPlatformRow();
+  showScreen('app-shell');
+  switchTab('home');
+  renderHomeHistory();
+}
+function syncChipGroup(containerId, value){
+  document.querySelectorAll('#'+containerId+' .chip').forEach(c=>{
+    c.classList.toggle('active', c.dataset.v===value);
+  });
+}
+function saveProfile(){
+  const niche = document.getElementById('profNiche').value.trim();
+  if(niche) profile.niche = niche;
+  document.getElementById('topNichePill').textContent = profile.platform + ' · ' + profile.niche;
+  buildPlatformRow();
+  saveState();
+  showToast('Profil mis à jour');
+}
+function buildPlatformRow(){
+  const row = document.getElementById('analyzePlatformRow');
+  const platforms = ['TikTok','Instagram Reels','YouTube Shorts','Facebook Reels'];
+  row.innerHTML = platforms.map(p=>`<button class="platform-chip ${p===profile.platform?'active':''}" data-p="${p}" onclick="pickAnalyzePlatform(this)">${p}</button>`).join('');
+}
+function pickAnalyzePlatform(btn){
+  document.querySelectorAll('#analyzePlatformRow .platform-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* =========================================================
+   TOOLS NAV
+========================================================= */
+function openTool(name){
+  showScreen('screen-'+name);
+  document.getElementById(name+'Form').style.display='block';
+  document.getElementById(name+'Loading').style.display='none';
+  document.getElementById(name+'Result').style.display='none';
+  if(name==='analyze'){
+    videoFrameStore['analyze'] = null;
+    videoExtractGen['analyze'] = (videoExtractGen['analyze']||0) + 1; // invalide toute extraction en cours
+    const f = document.getElementById('analyzeVideoFile'); if(f) f.value='';
+    const s = document.getElementById('analyzeVideoStatus');
+    if(s){ s.textContent='Lucide extrait des images clés de la vidéo pour analyser le rythme et le visuel. Au-delà de 5 Mo, seules les 5 premières secondes sont utilisées.'; s.className='field-hint'; }
+  }
+  if(name==='compare'){
+    videoFrameStore['compareA'] = null; videoFrameStore['compareB'] = null;
+    videoExtractGen['compareA'] = (videoExtractGen['compareA']||0) + 1;
+    videoExtractGen['compareB'] = (videoExtractGen['compareB']||0) + 1;
+    const fa = document.getElementById('compareVideoFileA'); if(fa) fa.value='';
+    const fb = document.getElementById('compareVideoFileB'); if(fb) fb.value='';
+    const sa = document.getElementById('compareAVideoStatus');
+    const sb = document.getElementById('compareBVideoStatus');
+    if(sa){ sa.textContent='Au-delà de 5 Mo, seules les 5 premières secondes sont analysées.'; sa.className='field-hint'; }
+    if(sb){ sb.textContent='Au-delà de 5 Mo, seules les 5 premières secondes sont analysées.'; sb.className='field-hint'; }
+  }
+}
+function closeTool(name){
+  showScreen('app-shell');
+  switchTab('home');
+  renderHomeHistory();
+}
+
+/* =========================================================
+   GROQ API HELPER — via le backend Vercel /api/lucide-ai
+========================================================= */
+async function callLucideAI(promptText, maxTokens, images){
+  const controller = new AbortController();
+  const timeoutId = setTimeout(()=>controller.abort(), 45000);
+
+  const imageParts = (images && images.length)
+    ? images.map(b64 => ({
+        type: 'image_url',
+        image_url: { url: 'data:image/jpeg;base64,' + b64 }
+      }))
+    : [];
+
+  const messageContent = imageParts.length
+    ? [...imageParts, { type:'text', text: promptText }]
+    : promptText;
+
+  let response;
+  try{
+    response = await fetch("/api/lucide-ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt: promptText,
+        maxTokens: maxTokens || 1200,
+        max_tokens: maxTokens || 1200,
+        images: images || [],
+        messages: [{ role: "user", content: messageContent }]
+      }),
+      signal: controller.signal
+    });
+  }catch(networkErr){
+    if(networkErr.name === 'AbortError'){
+      throw new Error("L'IA met trop de temps à répondre — réessaie.");
+    }
+    throw new Error("Impossible de contacter le serveur IA — vérifie ta connexion.");
+  }finally{
+    clearTimeout(timeoutId);
+  }
+
+  if(!response.ok){
+    if(response.status === 404){
+      throw new Error("Route IA introuvable (404) — vérifie le déploiement Vercel.");
+    }
+    if(response.status === 429){
+      throw new Error("Trop de requêtes en même temps — patiente un instant.");
+    }
+    let detail = "";
+    try{
+      const errData = await response.json();
+      detail = errData.error || errData.message || "";
+    }catch(_){}
+    throw new Error(detail || ("L'IA a renvoyé une erreur (code " + response.status + ")."));
+  }
+
+  const data = await response.json();
+
+  if(data && typeof data === 'object' && !Array.isArray(data) &&
+     (data.niches || data.idees || data.score !== undefined || data.gagnant)){
+    return data;
+  }
+
+  let raw = "";
+  if(typeof data === "string") raw = data;
+  else if(typeof data.text === "string") raw = data.text;
+  else if(typeof data.output === "string") raw = data.output;
+  else if(typeof data.response === "string") raw = data.response;
+  else if(Array.isArray(data.content)) raw = data.content.map(c=>typeof c === 'string' ? c : (c.text || '')).join('\n');
+  else if(data.choices?.[0]?.message?.content) raw = data.choices[0].message.content;
+
+  const clean = String(raw || "").replace(/```json/gi,'').replace(/```/g,'').trim();
+  if(!clean) throw new Error("Réponse vide de l'IA.");
+
+  try{
+    return JSON.parse(clean);
+  }catch(parseErr){
+    throw new Error("Réponse de l'IA illisible — réessaie.");
+  }
+}
+/* =========================================================
+   VIDEO IMPORT — extraction d'images clés (≤5 Mo)
+========================================================= */
+const MAX_VIDEO_BYTES = 5 * 1024 * 1024;
+const HARD_CAP_VIDEO_BYTES = 300 * 1024 * 1024; // au-delà, on refuse pour éviter de bloquer le navigateur
+let videoFrameStore = {}; // key -> array of base64 jpeg frames
+
+function extractFrames(file, capSeconds){
+  return new Promise((resolve, reject)=>{
+    const url = URL.createObjectURL(file);
+    const video = document.createElement('video');
+    video.src = url; video.muted = true; video.playsInline = true; video.preload = 'auto';
+
+    video.onloadedmetadata = () => {
+      let duration = isFinite(video.duration) && video.duration > 0 ? video.duration : 5;
+      if(capSeconds) duration = Math.min(duration, capSeconds);
+      const frameCount = 5;
+      const timestamps = [];
+      for(let i=0;i<frameCount;i++){
+        timestamps.push(Math.min(duration - 0.05, (duration * (i + 0.5)) / frameCount));
+      }
+      const canvas = document.createElement('canvas');
+      const ratio = (video.videoHeight && video.videoWidth) ? video.videoHeight/video.videoWidth : 1.78;
+      canvas.width = 320;
+      canvas.height = Math.round(320 * ratio);
+      const c2d = canvas.getContext('2d');
+      const frames = [];
+      let idx = 0;
+      function seekNext(){
+        if(idx >= timestamps.length){
+          URL.revokeObjectURL(url);
+          resolve(frames);
+          return;
+        }
+        video.currentTime = Math.max(0, timestamps[idx]);
+      }
+      video.onseeked = () => {
+        try{
+          c2d.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+          frames.push(dataUrl.split(',')[1]);
+        }catch(e){ /* skip unreadable frame */ }
+        idx++;
+        seekNext();
+      };
+      seekNext();
+    };
+    video.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Lecture vidéo impossible')); };
+  });
+}
+
+let videoExtractGen = {}; // key -> compteur, pour ignorer une extraction périmée si l'utilisateur change de fichier entre-temps
+
+function setToolButtonDisabled(key, disabled){
+  const btnId = key==='analyze' ? 'analyzeForm' : 'compareForm';
+  const form = document.getElementById(btnId);
+  if(!form) return;
+  const btn = form.querySelector('button.btn-signal');
+  if(btn) btn.disabled = disabled;
+}
+
+async function handleVideoSelect(input, key){
+  const statusEl = document.getElementById(
+    key==='analyze' ? 'analyzeVideoStatus' :
+    key==='compareA' ? 'compareAVideoStatus' : 'compareBVideoStatus'
+  );
+  const formKey = key==='compareA' || key==='compareB' ? 'compare' : 'analyze';
+  const file = input.files[0];
+  if(!file){ videoFrameStore[key] = null; return; }
+  if(!file.type.startsWith('video/')){
+    showToast('Sélectionne un fichier vidéo', true);
+    input.value = '';
+    return;
+  }
+  if(file.size > HARD_CAP_VIDEO_BYTES){
+    showToast('Vidéo trop volumineuse (max 300 Mo) — choisis un fichier plus léger', true);
+    input.value = '';
+    videoFrameStore[key] = null;
+    return;
+  }
+
+  const gen = (videoExtractGen[key] = (videoExtractGen[key]||0) + 1);
+  const overLimit = file.size > MAX_VIDEO_BYTES;
+  const sizeLabel = (file.size / (1024*1024)).toFixed(1) + ' Mo';
+  statusEl.textContent = (overLimit
+    ? `Vidéo (${sizeLabel}) > 5 Mo — extraction des 5 premières secondes...`
+    : `Extraction des images clés en cours (${sizeLabel})...`);
+  statusEl.className = 'field-hint';
+  setToolButtonDisabled(formKey, true);
+
+  try{
+    const frames = await extractFrames(file, overLimit ? 5 : null);
+    if(gen !== videoExtractGen[key]) return; // une sélection plus récente a pris le relais, on ignore ce résultat
+    if(!frames.length){
+      videoFrameStore[key] = null;
+      statusEl.textContent = "Aucune image n'a pu être extraite — le format vidéo n'est peut-être pas lisible par ce navigateur. Colle le script à la place.";
+      statusEl.className = 'field-hint warn';
+    } else {
+      videoFrameStore[key] = frames;
+      statusEl.textContent = overLimit
+        ? `Vidéo trop lourde pour être analysée en entier — ${frames.length} images extraites des 5 premières secondes.`
+        : `${frames.length} images extraites — la vidéo sera analysée visuellement.`;
+      statusEl.className = 'field-hint ' + (overLimit ? 'warn' : 'ok');
+    }
+  }catch(e){
+    if(gen !== videoExtractGen[key]) return;
+    videoFrameStore[key] = null;
+    statusEl.textContent = "Impossible de lire cette vidéo sur cet appareil (format non supporté ou aperçu restreint) — colle le script à la place.";
+    statusEl.className = 'field-hint warn';
+  }finally{
+    if(gen === videoExtractGen[key]) setToolButtonDisabled(formKey, false);
+  }
+}
+
+/* =========================================================
+   TOOL 1: ANALYZE
+========================================================= */
+async function runAnalyze(){
+  const text = document.getElementById('analyzeText').value.trim();
+  const frames = videoFrameStore['analyze'];
+  if(!text && (!frames || !frames.length)){ showToast('Importe une vidéo ou colle un script', true); return; }
+  const link = document.getElementById('analyzeLink').value.trim();
+  const platform = document.querySelector('#analyzePlatformRow .platform-chip.active')?.dataset.p || profile.platform;
+  const views = document.getElementById('statViews').value;
+  const retention = document.getElementById('statRetention').value;
+
+  document.getElementById('analyzeForm').style.display='none';
+  document.getElementById('analyzeLoading').style.display='block';
+
+  const prompt = `Tu es Lucide, un analyste de contenu viral rigoureux et honnête (pas complaisant). Analyse ce contenu pour ${platform}, niche "${profile.niche}", objectif "${profile.goal}".
+${frames && frames.length ? `\nTu as accès à ${frames.length} captures d'écran prises à différents moments de la vidéo — utilise-les pour juger le rythme visuel, le cadrage, les textes à l'écran et l'énergie générale, en plus du texte.\n` : ''}
+${text ? `Contenu / script à analyser :\n"""${text}"""` : "Aucun script fourni — base ton analyse sur les captures d'écran de la vidéo."}
+
+${views?('Vues actuelles: '+views+'. '):''}${retention?('Rétention actuelle: '+retention+'%.'):''}
+
+Réponds UNIQUEMENT avec un objet JSON valide (aucun texte avant/après, aucun markdown), au format exact suivant. Écris dans un style naturel et humain, pas dans un ton robotique ou formaté à l'excès :
+{
+  "score": <entier 0-100, score global honnête, pas complaisant>,
+  "verdict": "<1 phrase franche résumant le diagnostic>",
+  "subscores": {"accroche": <0-100>, "rythme": <0-100>, "appel_action": <0-100>, "clarte": <0-100>},
+  "points_forts": ["<point fort concret>", "<point fort concret>"],
+  "points_faibles": ["<point faible concret et actionnable>", "<point faible concret et actionnable>"],
+  "hooks_alternatifs": ["<réécriture 1 du hook, percutante>", "<réécriture 2, angle différent>"],
+  "legende": "<légende suggérée courte>",
+  "hashtags": "<3-5 hashtags pertinents séparés par espace>"
+}`;
+
+  try{
+    const result = await callLucideAI(prompt, 1200, frames);
+    renderAnalyzeResult(result, text, platform, link);
+    saveHistory('analyze', result.score, (text || 'Analyse vidéo').slice(0,60), platform, result);
+  }catch(e){
+    showToast(e.message || "L'analyse a échoué — réessaie", true);
+    document.getElementById('analyzeForm').style.display='block';
+    document.getElementById('analyzeLoading').style.display='none';
+  }
+}
+function scoreColor(score){
+  if(score>=70) return 'var(--signal)';
+  if(score>=45) return 'var(--warn)';
+  return 'var(--danger)';
+}
+function renderAnalyzeResult(r, text, platform, link){
+  document.getElementById('analyzeLoading').style.display='none';
+  const wrap = document.getElementById('analyzeResult');
+  wrap.style.display='block';
+  const circumference = 314;
+  const offset = circumference - (circumference * r.score/100);
+  const col = scoreColor(r.score);
+  wrap.innerHTML = `
+    ${link?`<div class="field-hint" style="margin-bottom:14px; word-break:break-all;">🔗 ${escapeHtml(link)}</div>`:''}
+    <div class="dial-card">
+      <svg class="dial-svg" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="50" fill="none" stroke="#332338" stroke-width="10"/>
+        <circle cx="60" cy="60" r="50" fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round"
+          stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" transform="rotate(-90 60 60)"/>
+      </svg>
+      <div class="dial-center"><div class="num" style="color:${col};">${r.score}</div><div class="lbl">Signal Score</div></div>
+      <div class="dial-verdict">${escapeHtml(r.verdict)}</div>
+    </div>
+
+    <div class="subscore-row">
+      ${['accroche','rythme','appel_action','clarte'].map(k=>{
+        const labels = {accroche:'Accroche', rythme:'Rythme', appel_action:"Appel à l'action", clarte:'Clarté'};
+        const v = r.subscores[k];
+        return `<div class="subscore"><div class="l">${labels[k]}</div><div class="subscore-bar-bg"><div class="subscore-bar-fill" style="width:${v}%; background:${scoreColor(v)};"></div></div><div class="v mono">${v}</div></div>`;
+      }).join('')}
+    </div>
+
+    <div class="result-block">
+      <h4>Points forts</h4>
+      ${r.points_forts.map(p=>`<div class="point-item pos"><span class="ic">✓</span><span>${escapeHtml(p)}</span></div>`).join('')}
+    </div>
+    <div class="result-block">
+      <h4>À corriger</h4>
+      ${r.points_faibles.map(p=>`<div class="point-item neg"><span class="ic">!</span><span>${escapeHtml(p)}</span></div>`).join('')}
+    </div>
+    <div class="result-block">
+      <h4>Hooks alternatifs</h4>
+      ${r.hooks_alternatifs.map((h,i)=>`<div class="hook-alt"><span class="tag">Option ${i+1}</span>${escapeHtml(h)}</div>`).join('')}
+    </div>
+    <div class="result-block">
+      <h4>Légende suggérée</h4>
+      <div class="caption-box">${escapeHtml(r.legende)}<span class="hashtags">${escapeHtml(r.hashtags)}</span></div>
+    </div>
+    <button class="btn btn-ghost btn-block" onclick="openTool('analyze')">Nouvelle analyse</button>
+  `;
+}
+
+/* =========================================================
+   TOOL 2: COMPARE
+========================================================= */
+async function runCompare(){
+  const a = document.getElementById('compareA').value.trim();
+  const b = document.getElementById('compareB').value.trim();
+  const linkA = document.getElementById('compareLinkA').value.trim();
+  const linkB = document.getElementById('compareLinkB').value.trim();
+  const framesA = videoFrameStore['compareA'] || [];
+  const framesB = videoFrameStore['compareB'] || [];
+  if((!a && !framesA.length) || (!b && !framesB.length)){
+    showToast('Importe une vidéo ou colle un script pour A et B', true); return;
+  }
+
+  document.getElementById('compareForm').style.display='none';
+  document.getElementById('compareLoading').style.display='block';
+
+  const hasFrames = framesA.length || framesB.length;
+  const framesNote = hasFrames
+    ? `\nTu as accès à des captures d'écran des vidéos : les ${framesA.length} premières images sont la Vidéo A, les ${framesB.length} suivantes sont la Vidéo B. Utilise-les pour juger le rythme visuel et le cadrage de chaque vidéo.\n`
+    : '';
+
+  const prompt = `Tu es Lucide, analyste de contenu viral honnête. Compare ces deux vidéos pour ${profile.platform}, niche "${profile.niche}", objectif "${profile.goal}".
+${framesNote}
+Vidéo A${linkA?(' ('+linkA+')'):''}: """${a || '(pas de script fourni, base-toi sur les captures)'}"""
+Vidéo B${linkB?(' ('+linkB+')'):''}: """${b || '(pas de script fourni, base-toi sur les captures)'}"""
+
+Réponds UNIQUEMENT avec un JSON valide, sans texte autour. Écris dans un style naturel et direct, pas robotique :
+{
+  "gagnant": "A" ou "B",
+  "raison": "<2-3 phrases expliquant pourquoi, factuel et précis>",
+  "score_a": <0-100>,
+  "score_b": <0-100>,
+  "conseil_fusion": "<comment combiner les forces des deux versions en une seule vidéo améliorée>"
+}`;
+
+  try{
+    const combinedFrames = [...framesA, ...framesB];
+    const result = await callLucideAI(prompt, 1200, combinedFrames);
+    renderCompareResult(result, linkA, linkB);
+    saveHistory('compare', Math.max(result.score_a,result.score_b), (a||'Vidéo A').slice(0,40)+' vs '+(b||'Vidéo B').slice(0,40), profile.platform, result);
+  }catch(e){
+    showToast(e.message || 'La comparaison a échoué — réessaie', true);
+    document.getElementById('compareForm').style.display='block';
+    document.getElementById('compareLoading').style.display='none';
+  }
+}
+function renderCompareResult(r, linkA, linkB){
+  document.getElementById('compareLoading').style.display='none';
+  const wrap = document.getElementById('compareResult');
+  wrap.style.display='block';
+  wrap.innerHTML = `
+    ${(linkA||linkB)?`<div class="field-hint" style="margin-bottom:14px; word-break:break-all;">${linkA?'🔗 A: '+escapeHtml(linkA)+'<br>':''}${linkB?'🔗 B: '+escapeHtml(linkB):''}</div>`:''}
+    <div class="winner-card">
+      <div class="tag">Vidéo gagnante</div>
+      <h3>Vidéo ${escapeHtml(r.gagnant)}</h3>
+    </div>
+    <div class="subscore-row">
+      <div class="subscore"><div class="l">Vidéo A</div><div class="subscore-bar-bg"><div class="subscore-bar-fill" style="width:${r.score_a}%; background:${scoreColor(r.score_a)};"></div></div><div class="v mono">${r.score_a}</div></div>
+      <div class="subscore"><div class="l">Vidéo B</div><div class="subscore-bar-bg"><div class="subscore-bar-fill" style="width:${r.score_b}%; background:${scoreColor(r.score_b)};"></div></div><div class="v mono">${r.score_b}</div></div>
+    </div>
+    <div class="result-block">
+      <h4>Pourquoi</h4>
+      <div class="point-item">${escapeHtml(r.raison)}</div>
+    </div>
+    <div class="result-block">
+      <h4>Pour aller plus loin</h4>
+      <div class="hook-alt"><span class="tag">Fusion suggérée</span>${escapeHtml(r.conseil_fusion)}</div>
+    </div>
+    <button class="btn btn-ghost btn-block" onclick="openTool('compare')">Nouvelle comparaison</button>
+  `;
+}
+
+/* =========================================================
+   TOOL 3: IDEAS
+========================================================= */
+async function runIdeas(){
+  const niche = document.getElementById('ideasNiche').value.trim() || profile.niche;
+
+  document.getElementById('ideasForm').style.display='none';
+  document.getElementById('ideasLoading').style.display='block';
+
+  const prompt = `Tu es Lucide, générateur d'idées de contenu pour créateurs. Génère 4 idées de vidéos pour ${profile.platform}, niche "${niche}", objectif "${ideasGoalSelected}". Les idées doivent être concrètes et réalisables, pas génériques. Pour chaque idée, écris un script complet et prêt à tourner, dans un style naturel et parlé — comme si le créateur parlait vraiment à la caméra, pas un ton robotique ou formaté à l'excès.
+
+Réponds UNIQUEMENT avec un JSON valide :
+{
+  "idees": [
+    {
+      "titre": "<titre accrocheur>",
+      "format": "<ex: Tutoriel 30s, Storytime, Avant/Après>",
+      "raison": "<pourquoi ça marche pour cette niche et cet objectif, 1 phrase>",
+      "structure": ["<étape 1 de la structure, courte>", "<étape 2>", "<étape 3>", "<étape 4>"],
+      "script_complet": "<script complet prêt à lire/tourner : accroche + corps + appel à l'action, texte continu>"
+    }
+  ]
+}`;
+
+  try{
+    const result = await callLucideAI(prompt, 2800);
+    renderIdeasResult(result);
+  }catch(e){
+    showToast(e.message || 'La génération a échoué — réessaie', true);
+    document.getElementById('ideasForm').style.display='block';
+    document.getElementById('ideasLoading').style.display='none';
+  }
+}
+window._ideasData = [];
+function renderIdeasResult(r){
+  document.getElementById('ideasLoading').style.display='none';
+  const wrap = document.getElementById('ideasResult');
+  wrap.style.display='block';
+  window._ideasData = r.idees;
+  wrap.innerHTML = r.idees.map((i,idx)=>`
+    <div class="idea-card">
+      <span class="fmt">${escapeHtml(i.format)}</span>
+      <h4>${escapeHtml(i.titre)}</h4>
+      <p>${escapeHtml(i.raison)}</p>
+      <div class="idea-structure">
+        ${i.structure.map((s,si)=>`<div class="struct-step"><span class="struct-num">${si+1}</span>${escapeHtml(s)}</div>`).join('')}
+      </div>
+      <button class="btn btn-outline btn-block" style="margin-top:12px; padding:11px;" onclick="toggleScript(${idx})">Voir le script complet</button>
+      <div class="script-box" id="scriptBox${idx}" style="display:none;">
+        <p id="scriptSelectBox${idx}" style="white-space:pre-wrap; margin:0 0 12px;">${escapeHtml(i.script_complet)}</p>
+        <button class="btn btn-signal btn-block" style="padding:11px;" onclick="copyScript(${idx})">Copier le script</button>
+      </div>
+    </div>
+  `).join('') + `<button class="btn btn-ghost btn-block" style="margin-top:8px;" onclick="openTool('ideas')">Générer d'autres idées</button>`;
+}
+function toggleScript(idx){
+  const box = document.getElementById('scriptBox'+idx);
+  box.style.display = box.style.display==='none' ? 'block' : 'none';
+}
+function copyText(text, idx){
+  function fallbackCopy(){
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      if(ok){ showToast('Script copié !'); return true; }
+    }catch(e){}
+    return false;
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(()=>{
+      showToast('Script copié !');
+    }).catch(()=>{
+      if(!fallbackCopy()) revealForManualCopy(idx);
+    });
+  } else {
+    if(!fallbackCopy()) revealForManualCopy(idx);
+  }
+}
+function revealForManualCopy(idx){
+  showToast('Copie auto indisponible — sélectionne le texte ci-dessous', true);
+  const box = document.getElementById('scriptSelectBox'+idx);
+  if(box){
+    box.style.display = 'block';
+    const range = document.createRange();
+    range.selectNodeContents(box);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+}
+function copyScript(idx){
+  const text = window._ideasData[idx].script_complet;
+  copyText(text, idx);
+}
+
+/* =========================================================
+   HISTORY
+========================================================= */
+function saveHistory(type, score, snippet, platform, data){
+  history.unshift({ id:Date.now(), type, score, snippet, platform, date:new Date(), data });
+  history = history.slice(0, 50); // évite une croissance illimitée du stockage local
+  saveState();
+  renderHomeHistory();
+}
+function histRow(h){
+  const col = scoreColor(h.score);
+  const typeLabel = {analyze:'Analyse', compare:'Comparaison'}[h.type] || h.type;
+  return `<div class="hist-row">
+    <div class="hist-score mono" style="background:${col}22; color:${col};">${h.score}</div>
+    <div class="hist-info"><div class="t">${escapeHtml(h.snippet)}</div><div class="s">${escapeHtml(typeLabel)} · ${escapeHtml(h.platform)}</div></div>
+  </div>`;
+}
+function renderHomeHistory(){
+  const wrap = document.getElementById('homeHistoryList');
+  if(history.length===0){
+    wrap.innerHTML = `<div class="empty-note">Aucune analyse pour l'instant.<br>Lance ta première analyse ci-dessus.</div>`;
+  } else {
+    wrap.innerHTML = history.slice(0,3).map(histRow).join('');
+  }
+}
+function renderFullHistory(){
+  const wrap = document.getElementById('fullHistoryList');
+  if(history.length===0){
+    wrap.innerHTML = `<div class="empty-note">Aucune analyse pour l'instant.</div>`;
+  } else {
+    wrap.innerHTML = history.map(histRow).join('');
+  }
+}
+
+/* =========================================================
+   INIT — restaure la session précédente si elle existe
+========================================================= */
+(function init(){
+  if(loadState()){
+    enterApp();
+  }
+})();
+</script>
+</body>
+</html>

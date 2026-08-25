@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "functions": {
+    "api/lucide-ai.js": {
+      "maxDuration": 60
+    }
+  }
+}
